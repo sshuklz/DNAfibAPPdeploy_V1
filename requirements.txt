@@ -16,7 +16,7 @@ Jinja2==3.1.2
 MarkupSafe==2.1.1
 networkx==2.8.5
 numpy==1.23.1
-opencv-python==4.6.0.66
+opencv-contrib-python-headless
 packaging==21.3
 pandas==1.4.3
 patsy==0.5.2
