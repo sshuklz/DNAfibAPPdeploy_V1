@@ -28,10 +28,11 @@ from ImageOPs import (ImageOperations, parse_contents, blank_fig)
 external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app=dash.Dash(__name__, external_stylesheets=external_stylesheets)
+server=app.server
 
 app.config['suppress_callback_exceptions']=True
 app.title='DNA Fiber Analysis DEMO'
-server=app.server
+
 
 DNA_fiber_types=['stalled',
                 '2nd origin',
@@ -647,6 +648,8 @@ def shape_added(fig_data, fig, tab, fiber, shape_coords, shape_number, new_row):
         
         if 'shapes' in fig_data:
             
+            shape_n = len(fig_data["shapes"])
+            
             last_shape=fig_data["shapes"][-1]
             x0, y0=int(last_shape["x0"]), int(last_shape["y0"])
             x1, y1=int(last_shape["x1"]), int(last_shape["y1"])
@@ -733,21 +736,27 @@ def shape_added(fig_data, fig, tab, fiber, shape_coords, shape_number, new_row):
             
         elif re.match("shapes\[[0-9]+\].x0", list(fig_data.keys())[0]):
             
+            shape_n = shape_number
+            
             for key, val in fig_data.items():
                 
                 shape_nb, coord=key.split(".")
                 shape_nb=shape_nb.split(".")[0].split("[")[-1].split("]")[0]
                 
                 if coord=='x0':
+                    
                     x0=int(fig_data[key])
                     
                 elif coord=='x1':
+                    
                     x1=int(fig_data[key])
                 
                 elif coord=='y0':
+                    
                     y0=int(fig_data[key])
                 
                 elif coord=='y1':
+                    
                     y1=int(fig_data[key])
             
             if x0 > x1:
@@ -777,7 +786,7 @@ def shape_added(fig_data, fig, tab, fiber, shape_coords, shape_number, new_row):
             
             shape_coords.append({'n':n, 'x0':x0, 'y0': y0, 'x1': x1, 'y1':y1})
         
-        return new_row, len(fig_data["shapes"]), shape_coords
+        return new_row, shape_n, shape_coords
     
     else:
         
