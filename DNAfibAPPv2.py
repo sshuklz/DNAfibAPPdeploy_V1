@@ -1,9 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jun 21 08:16:40 2022
+
+@author: Shalabh
+"""
 import dash
+from dash import callback_context
 from dash import dash_table
 from dash import dcc
 from dash import html
-from dash.dependencies import (Input, Output, State)
 import dash_bootstrap_components as dbc
+import dash_daq as daq
+from dash.dependencies import (Input, Output, State)
+
 
 import base64
 import cv2
@@ -15,22 +25,22 @@ from skimage import io
 
 from ImageOPs import (ImageOperations, parse_contents, blank_fig)
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-app = dash.Dash(__name__, external_stylesheets = external_stylesheets)
-server = app.server
+app=dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-app.config['suppress_callback_exceptions'] = True
-app.title = 'DNA Fiber Analysis DEMO'
+app.config['suppress_callback_exceptions']=True
+app.title='DNA Fiber Analysis DEMO'
+server=app.server
 
-DNA_fiber_types = ['stalled',
+DNA_fiber_types=['stalled',
                 '2nd origin',
                 'progressing fork one direction',
                 'progressing fork bidirectional',
                 'terminated fork',
                 'interspersed']
 
-color_types = ['Primary Red : Secondary Green',
+color_types=['Primary Red : Secondary Green',
                'Primary Green : Secondary Red',
                'Primary Red : Secondary Blue',
                'Primary Blue : Secondary Red',
@@ -51,26 +61,29 @@ color_types = ['Primary Red : Secondary Green',
               'Primary Cyan : Secondary Yellow',
               'Primary Yellow : Secondary Cyan']
 
-tab_style = {
+tab_style={
     'borderBottom': '1px solid #d6d6d6',
     'padding': '6px',
-    'fontWeight': 'bold'
+    'fontWeight': 'bold',
+    'align-items': 'center'
 }
 
-tab_selected_style = {
+tab_selected_style={
     'borderTop': '1px solid #d6d6d6',
     'borderBottom': '1px solid #d6d6d6',
     'backgroundColor': '#119DFF',
     'color': 'white',
     'fontWeight': 'bold',
-    'padding': '6px'
+    'padding': '6px',
+    'align-items': 'center',
+    'justify-content' : 'center'
 }
 
-df = pd.DataFrame(columns=['Selection', 'Type', 'Height', 'Width', 'Green:Red'])
+df=pd.DataFrame(columns=['Selection', 'Type', 'Height', 'Width', 'Green:Red'])
 
 columns=['Selection', 'Type', 'Height', 'Width', 'Green:Red']
 
-colors = [
+colors=[
  ['R','G'],
  ['G','R'],
  ['R','B'],
@@ -90,14 +103,16 @@ colors = [
    ['C','Y'],
    ['Y','C']]
 
-color_options = []
+color_options=[]
 
-height_vals = [10,10,30,10,10,30]
+height_vals=[10,10,30,10,10,30]
+
+marks_T={i: str(i) for i in range(0, 256, 15)}
 
 for i in range(len(colors)):
 
-    c1 = colors[i][0] ; c2 = colors[i][1]
-    label_name = c1 +c2 + '.png'
+    c1=colors[i][0] ; c2=colors[i][1]
+    label_name=c1 +c2 + '.png'
 
     color_options.append(
     {
@@ -105,18 +120,18 @@ for i in range(len(colors)):
             [
                 html.Img(src="/assets/Color_options/Label_" + label_name, height=30),
                 html.Div(color_types[i], style={'font-size': 15, 'padding-left': 10}),
-            ], style={'display': 'flex', 'align-items': 'left', 'justify-content': 'left'}
+            ], style={'display': 'flex', 'align-items': 'center', 'justify-content': 'left'}
         ),
         "value": color_types[i],
     })
 
 def fiber_dropdown_images(c1,c2):
 
-    fiber_options = []
+    fiber_options=[]
 
     for i in range(6):
     
-        label_name = DNA_fiber_types[i].replace(" ", "_") + '_' + c1 + '_' + c2 + '.png'
+        label_name=DNA_fiber_types[i].replace(" ", "_") + '_' + c1 + '_' + c2 + '.png'
     
         fiber_options.append(
             {
@@ -124,20 +139,20 @@ def fiber_dropdown_images(c1,c2):
                     [
                         html.Img(src="/assets/DNA_Fib_type_colors/" + label_name, height=height_vals[i]),
                         html.Div(DNA_fiber_types[i], style={'font-size': 15, 'padding-left': 10}),
-                    ], style={'display': 'flex', 'align-items': 'center', 'justify-content': 'space-between',}
+                    ], style={'display': 'flex', 'align-items': 'center', 'justify-content': 'start',}
                 ),
                 "value": DNA_fiber_types[i],
             })
         
     return(fiber_options)
 
-items_method = [
+items_method=[
     dbc.DropdownMenuItem("Rectangle"),
     dbc.DropdownMenuItem("Lasso"),
     dbc.DropdownMenuItem("Line"),
 ]
 
-fig = px.imshow(io.imread("assets/blank.png"))
+fig=px.imshow(io.imread("assets/blank.png"))
 
 fig.update_layout(
     coloraxis_showscale=False, 
@@ -148,7 +163,7 @@ fig.update_xaxes(showticklabels=False)
 fig.update_yaxes(showticklabels=False)
 fig.update_layout(dragmode=False)
 
-app.layout = html.Div([
+app.layout=html.Div([
     
     html.Meta(charSet='UTF-8'),
     html.Meta(name='viewport', content='width=device-width, initial-scale=1.0'),
@@ -185,84 +200,129 @@ app.layout = html.Div([
                 
                 dcc.Tabs(
                     id='image-processors-tabs',
-                    value='operators',
+                    value='color_tab',
                     children=[
+                        
+                        dcc.Tab(
+                            label='Label and Fiber Details',
+                            value='color_tab',
+                            style=tab_style,
+                            selected_style=tab_selected_style,
+                            children=[html.Div([
+                                    
+                                html.H6('Label Colors', style={'paddingTop' : 15}),
+                                html.Div([dcc.Dropdown(color_options, 
+                                                       color_types[0],
+                                                       id='color_label-dropdown')]),
+                                
+                                html.H6('Corrosponding Schema', style={'paddingTop' : 15}),
+                                html.Img(id='schema', style={'height':'100%', 'width':'100%'})
+                                
+                            ])]
+                            
+                        ),
                         
                         dcc.Tab(
                             label='Image Operations',
                             value='operators',
                             style=tab_style,
                             selected_style=tab_selected_style,
-                            children=[
+                            children=[html.Div([
                                 
-                                html.H6('Gamma'),
-                                dcc.Slider(
+                                html.H6('Subtract RGB From Image', style={'paddingTop' : 15}),
+                                daq.Slider(
+                                    id='slider-CR',
+                                    min=0,
+                                    max=255,
+                                    step=1,
+                                    value=0,
+                                    size=540,
+                                    color='red',
+                                    marks=marks_T),
+                                
+                                html.H6(' ', style={'paddingTop' : 15}),
+                                daq.Slider(
+                                    id='slider-GR',
+                                    min=0,
+                                    max=255,
+                                    step=1,
+                                    value=0,
+                                    size=540,
+                                    color='green',
+                                    marks={i: str(i) for i in range(0, 256, 15)}),
+                                           
+                                html.H6(' ', style={'paddingTop' : 15}),
+                                daq.Slider(
+                                    id='slider-BR',
+                                    min=0,
+                                    max=255,
+                                    step=1,
+                                    value=0,
+                                    size=540,
+                                    color='blue',
+                                    marks={i: str(i) for i in range(0, 256, 15)}),
+                                        
+                                html.Div([
+                                
+                                    html.Button('BKG Correct',
+                                                id='auto-btn',
+                                                n_clicks=0,
+                                                style={'font-size': '14px',
+                                                       'width': '180px'}),
+                                    
+                                ], style={'paddingTop' : 45,
+                                          'margin-bottom': '10px',
+                                          'textAlign':'center',
+                                          'width': '220px',
+                                          'margin':'auto'}),
+                                
+                                html.H6('Gamma', style={'paddingTop' : 15}),
+                                daq.Slider(
                                     id='slider-Gamma',
                                     min=0.01,
                                     max=2,
                                     step=0.01,
                                     value=1,
-                                    marks={i: str(i) for i in range(0, 2, 1)}),
-
-                                html.H6('Correct Red Channel'),
-                                dcc.Slider(
-                                    id='slider-CR',
-                                    min=0,
-                                    max=256,
-                                    step=1,
-                                    value=0,
-                                    marks={i: str(i) for i in range(0, 256, 16)}),
+                                    size=540,
+                                    color='DarkGrey',
+                                    marks={i: str(i) for i in range(0, 3, 1)}),
                                 
-                                html.H6('Correct Green Channel'),
-                                dcc.Slider(
-                                    id='slider-GR',
-                                    min=0,
-                                    max=256,
-                                    step=1,
-                                    value=0,
-                                    marks={i: str(i) for i in range(0, 256, 16)}),
-                                           
-                                html.H6('Correct Blue Channel'),
-                                dcc.Slider(
-                                    id='slider-BR',
-                                    min=0,
-                                    max=256,
-                                    step=1,
-                                    value=0,
-                                    marks={i: str(i) for i in range(0, 256, 16)}),
-                                           
-                                html.H6('Denoise'),
-                                dcc.Slider(
+                                html.H6('Contrast', style={'paddingTop' : 15}),
+                                daq.Slider(
+                                    id='slider-Contrast',
+                                    min=0.01,
+                                    max=2,
+                                    step=0.01,
+                                    value=1,
+                                    size=540,
+                                    color='DarkGrey',
+                                    marks={i: str(i) for i in range(0, 3, 1)}),
+                                
+                                html.H6('Denoise', style={'paddingTop' : 15}),
+                                daq.Slider(
                                     id='slider-DI',
                                     min=0,
                                     max=50,
                                     step=1,
                                     value=0,
-                                    marks={i: str(i) for i in range(0, 50, 10)}),
-                                        
-                                html.H6('Contrast'),
-                                dcc.Slider(
-                                    id='slider-Contrast',
-                                    min=1,
-                                    max=3,
-                                    step=0.1,
-                                    value=1,
-                                    marks={i: str(i) for i in range(1, 3, 1)}),
+                                    size=540,
+                                    color='DarkGrey',
+                                    marks={i: str(i) for i in range(0, 60, 10)}),
                                      
-                            ]),
-                    
-                        dcc.Tab(
-                            label='Label Colors and Fiber Details',
-                            value='color_tab',
-                            style=tab_style,
-                            selected_style=tab_selected_style,
-                            children=[html.Div([
-                                    
-                                html.H6('Label Colors'),
-                                html.Div([dcc.Dropdown(color_options, 
-                                                       color_types[0],
-                                                       id='color_label-dropdown')])
-                            
+                                html.Div([
+                                          
+                                    html.Button('Reset Image',
+                                                id='reset-btn',
+                                                n_clicks=0,
+                                                style={'font-size': '14px',
+                                                       'width': '180px'})
+                                
+                                ], style={'paddingTop' : 45,
+                                          'margin-bottom': '10px',
+                                          'textAlign':'center',
+                                          'width': '220px',
+                                          'margin':'auto'})
+                                     
                             ])]
                             
                         ),
@@ -274,7 +334,7 @@ app.layout = html.Div([
                             selected_style=tab_selected_style,
                             children=[html.Div([
                                     
-                                html.H6('Selection type'),
+                                html.H6('Selection type', style={'paddingTop' : 15}),
                                 html.Div(html.Div([
                                     
                                     dcc.Dropdown(['Rectangle', 'Lasso', 'Line'], 
@@ -282,15 +342,16 @@ app.layout = html.Div([
                                     
                                 ], style={'width':'100%'})),
                                           
-                                html.H6('DNA Fiber type'),
+                                html.H6('DNA Fiber type', style={'paddingTop' : 15}),
                                 html.Div([
                                     
                                     dcc.Dropdown(fiber_dropdown_images('R','G'),
                                                        DNA_fiber_types[0], 
                                                        id='fiber-dropdown')
                                 
-                                ], style={'width':'100%','paddingBottom' : 25}),
+                                ]),
                                     
+                                html.H6('Selected Fiber Data Table', style={'paddingTop' : 15}),
                                 dash_table.DataTable(
                                     id="annotations-table",
                                     columns=[
@@ -302,9 +363,10 @@ app.layout = html.Div([
                                     
                                     ],
                                     editable=True,
+                                    fill_width=True,
                                     page_action="native",
-                                    page_current= 0,
-                                    page_size= 10,
+                                    page_current=0,
+                                    page_size=10,
                                     style_data={"height": 15},
                                     style_cell={
                                         "textAlign": "left",
@@ -312,7 +374,7 @@ app.layout = html.Div([
                                         "textOverflow": "ellipsis",
                                         "maxWidth": 0,
                                     },
-                                    fill_width=True,
+                                    
                                 ),
                                 
                             ])]
@@ -356,7 +418,7 @@ app.layout = html.Div([
 
     html.Div(html.Div([html.Div( 
         
-        children= [
+        children=[
             html.H4(' ', id='Selected_Fiber_Title'),
             dcc.Loading(
                 id='loading-sel',
@@ -384,7 +446,7 @@ app.layout = html.Div([
 
 def reset_relayout(tab):
     
-    if tab == 'selections':
+    if tab=='selections':
         
         return dash.no_update
     
@@ -398,7 +460,7 @@ def reset_relayout(tab):
 
 def show_text_selection_title(tab):
     
-    if tab == 'selections':
+    if tab=='selections':
         
         return "Selected Fiber"
     
@@ -407,7 +469,8 @@ def show_text_selection_title(tab):
 
 
 @app.callback(
-    Output("fiber-dropdown", "options"),
+    [Output("fiber-dropdown", "options"),
+     Output('schema', 'src')],
     Input("color_label-dropdown", "value"))
 
 def color_fiber_display(color_selection):
@@ -416,10 +479,57 @@ def color_fiber_display(color_selection):
         
         return dash.no_update
     
-    i = color_types.index(color_selection)
-    c1 = colors[i][0] ; c2 = colors[i][1]
+    i=color_types.index(color_selection)
+    c1=colors[i][0] ; c2=colors[i][1]
+    src_path='/assets/Schema/Schema_' + c1 +'_' + c2 +'.png'
     
-    return fiber_dropdown_images(c1,c2)
+    return fiber_dropdown_images(c1,c2), src_path
+
+
+
+@app.callback(Output('slider-CR', 'value'),
+              Output('slider-GR', 'value'),
+              Output('slider-BR', 'value'),
+              Output('slider-Gamma', 'value'),
+              Output('slider-Contrast', 'value'),
+              Output('slider-DI', 'value'),
+              Input('image-processors-tabs', 'value'),
+              Input('reset-btn', 'n_clicks'),
+              Input('auto-btn', 'n_clicks'),
+              Input("color_label-dropdown", "value"),
+              Input('upload-image', 'contents'),
+              State('out-op-img', 'figure'),
+              State('upload-image', 'filename'))
+
+def autocorrect(tab,btn1,btn2,color_selection,contents,filenames,dates):
+    
+    if contents is None:
+        
+        return dash.no_update
+    
+    if tab !='operators':
+        
+        return dash.no_update
+    
+    changed_id = [p['prop_id'] for p in callback_context.triggered][0]
+    
+    if 'reset-btn' in changed_id:
+        
+        return 0,0,0,1,1,0
+        
+    elif 'auto-btn' in changed_id:
+
+        i=color_types.index(color_selection)
+        c1=colors[i][0] ; c2=colors[i][1]
+        
+        imsrc=parse_contents(contents, filenames, dates)
+        imo=ImageOperations(image_file_src=imsrc)
+
+        return imo.auto_correct_operation(c1,c2)
+    
+    else:
+        
+        return dash.no_update
 
 
 
@@ -441,35 +551,35 @@ def get_operated_image(contents, gam, CR, GR, BR, DI, con, tab, method, filename
     
     if contents is not None:
         
-        imsrc = parse_contents(contents, filenames, dates)
-        imo = ImageOperations(image_file_src = imsrc)
-        out_img = imo.read_operation()
+        imsrc=parse_contents(contents, filenames, dates)
+        imo=ImageOperations(image_file_src=imsrc)
+        out_img=imo.read_operation()
         
-        if gam != 1:
+        if gam !=1:
         
-            out_img = imo.gamma_operation(thresh_val = gam)
+            out_img=imo.gamma_operation(thresh_val=gam)
             
         if CR > 0:
         
-            out_img = imo.CR_operation(thresh_val = CR)
+            out_img=imo.CR_operation(thresh_val=CR)
             
         if GR > 0:
         
-            out_img = imo.GR_operation(thresh_val = GR)
+            out_img=imo.GR_operation(thresh_val=GR)
             
         if BR > 0:
         
-            out_img = imo.BR_operation(thresh_val = BR)
+            out_img=imo.BR_operation(thresh_val=BR)
             
         if DI > 0:
         
-            out_img = imo.denoiseI_operation(thresh_val = DI)
+            out_img=imo.denoiseI_operation(thresh_val=DI)
             
         if con > 1:
         
-            out_img = imo.contrast_operation(thresh_val = con)
+            out_img=imo.contrast_operation(thresh_val=con)
 
-        out_image_fig = px.imshow(out_img)
+        out_image_fig=px.imshow(out_img)
         out_image_fig.update_layout(
             coloraxis_showscale=False, 
             width=1000, height=750, 
@@ -479,22 +589,22 @@ def get_operated_image(contents, gam, CR, GR, BR, DI, con, tab, method, filename
         out_image_fig.update_yaxes(showticklabels=False)
         out_image_fig.update_layout(dragmode=False)
         
-        if tab == 'selections':
+        if tab=='selections':
             
-            if method == 'Rectangle':
+            if method=='Rectangle':
                 
                 out_image_fig.update_layout(dragmode='drawrect',
-            newshape=dict(line = {"color": "#0066ff", "width": 1.5, "dash": "solid"}))
+            newshape=dict(line={"color": "#0066ff", "width": 1.5, "dash": "solid"}))
                 
-            if method == 'Lasso':
+            if method=='Lasso':
                 
                 out_image_fig.update_layout(dragmode='drawclosedpath',
-            newshape=dict(line = {"color": "#0066ff", "width": 1.5, "dash": "solid"}))
+            newshape=dict(line={"color": "#0066ff", "width": 1.5, "dash": "solid"}))
                 
-            if method == 'Line':
+            if method=='Line':
                 
                 out_image_fig.update_layout(dragmode='drawline',
-            newshape=dict(line = {"color": "#0066ff", "width": 1.5, "dash": "solid"}))
+            newshape=dict(line={"color": "#0066ff", "width": 1.5, "dash": "solid"}))
                     
         return out_image_fig
     
@@ -518,14 +628,14 @@ def get_operated_image(contents, gam, CR, GR, BR, DI, con, tab, method, filename
 
 def shape_added(fig_data, fig, tab, fiber, shape_coords, shape_number, new_row): 
     
-    if tab == 'selections':
+    if tab=='selections':
         
-        nparr = np.frombuffer(
+        nparr=np.frombuffer(
             base64.b64decode(fig['data'][0]['source'][22:]), np.uint8)
         
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        imo = ImageOperations(image_file_src=img)
+        img=cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        img=cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        imo=ImageOperations(image_file_src=img)
         
         if fig_data is None:
             
@@ -537,26 +647,26 @@ def shape_added(fig_data, fig, tab, fiber, shape_coords, shape_number, new_row):
         
         if 'shapes' in fig_data:
             
-            last_shape = fig_data["shapes"][-1]
-            x0, y0 = int(last_shape["x0"]), int(last_shape["y0"])
-            x1, y1 = int(last_shape["x1"]), int(last_shape["y1"])
+            last_shape=fig_data["shapes"][-1]
+            x0, y0=int(last_shape["x0"]), int(last_shape["y0"])
+            x1, y1=int(last_shape["x1"]), int(last_shape["y1"])
             
             if x0 > x1:
                 
-                x0, x1 = x1, x0
+                x0, x1=x1, x0
                 
             if y0 > y1:
                 
-                y0, y1 = y1, y0
+                y0, y1=y1, y0
             
-            Height = int(abs(y1 - y0))
-            Width = int(abs(x1 - x0))
-            ratio = imo.G_R_operation(x0, x1, y0, y1)
+            Height=int(abs(y1 - y0))
+            Width=int(abs(x1 - x0))
+            ratio=imo.G_R_operation(x0, x1, y0, y1)
             
             if new_row is None:
             
-                n = 0
-                new_row = [{'Selection':n, 
+                n=0
+                new_row=[{'Selection':n, 
                             'Type':fiber, 
                             'Height': Height, 
                             'Width': Width, 
@@ -566,26 +676,26 @@ def shape_added(fig_data, fig, tab, fiber, shape_coords, shape_number, new_row):
                 
                 if len(fig_data["shapes"]) < shape_number:
                     
-                    shape_coord = []; table_coord = []
+                    shape_coord=[]; table_coord=[]
                     
                     for shape in fig_data["shapes"]:
                         
-                        x0, y0 = int(shape["x0"]), int(shape["y0"])
-                        x1, y1 = int(shape["x1"]), int(shape["y1"])
+                        x0, y0=int(shape["x0"]), int(shape["y0"])
+                        x1, y1=int(shape["x1"]), int(shape["y1"])
                         
                         if x0 > x1:
                             
-                            x0, x1 = x1, x0
+                            x0, x1=x1, x0
                             
                         if y0 > y1:
                             
-                            y0, y1 = y1, y0
+                            y0, y1=y1, y0
                         
-                        shape_coord += [[x0,x1,y0,y1]]
+                        shape_coord +=[[x0,x1,y0,y1]]
                     
                     for coord in shape_coords:
                             
-                        table_coord += [[coord['x0'],
+                        table_coord +=[[coord['x0'],
                                          coord['x1'],
                                          coord['y0'],
                                          coord['y1']]]
@@ -594,18 +704,18 @@ def shape_added(fig_data, fig, tab, fiber, shape_coords, shape_number, new_row):
                         
                         if i not in shape_coord:
                             
-                            x0 = i[0] ; x1 = i[1] ; y0 = i[2] ; y1 = i[3]
+                            x0=i[0] ; x1=i[1] ; y0=i[2] ; y1=i[3]
                             
                     for coord in shape_coords:
                         
-                        if [coord['x0'],coord['x1'],coord['y0'],coord['y1']] == [x0,x1,y0,y1]:
+                        if [coord['x0'],coord['x1'],coord['y0'],coord['y1']]==[x0,x1,y0,y1]:
                             
-                            new_row = list(filter(lambda i: i['Selection'] != coord['n'], new_row))
-                            shape_coords = list(filter(lambda i: i['n'] != coord['n'], shape_coords))
+                            new_row=list(filter(lambda i: i['Selection'] !=coord['n'], new_row))
+                            shape_coords=list(filter(lambda i: i['n'] !=coord['n'], shape_coords))
 
                             return new_row, len(fig_data["shapes"]), shape_coords
                         
-                if new_row[-1] == {'Selection':new_row[-1]['Selection'],
+                if new_row[-1]=={'Selection':new_row[-1]['Selection'],
                                    'Type':fiber, 
                                    'Height': Height, 
                                    'Width': Width, 
@@ -613,7 +723,7 @@ def shape_added(fig_data, fig, tab, fiber, shape_coords, shape_number, new_row):
                     
                     return dash.no_update
                 
-                n = new_row[-1]['Selection'] + 1
+                n=new_row[-1]['Selection'] + 1
                 
                 new_row.append({'Selection':n, 
                                 'Type':fiber, 
@@ -625,43 +735,43 @@ def shape_added(fig_data, fig, tab, fiber, shape_coords, shape_number, new_row):
             
             for key, val in fig_data.items():
                 
-                shape_nb, coord = key.split(".")
-                shape_nb = shape_nb.split(".")[0].split("[")[-1].split("]")[0]
+                shape_nb, coord=key.split(".")
+                shape_nb=shape_nb.split(".")[0].split("[")[-1].split("]")[0]
                 
-                if coord == 'x0':
-                    x0 = int(fig_data[key])
+                if coord=='x0':
+                    x0=int(fig_data[key])
                     
-                elif coord == 'x1':
-                    x1 = int(fig_data[key])
+                elif coord=='x1':
+                    x1=int(fig_data[key])
                 
-                elif coord == 'y0':
-                    y0 = int(fig_data[key])
+                elif coord=='y0':
+                    y0=int(fig_data[key])
                 
-                elif coord == 'y1':
-                    y1 = int(fig_data[key])
+                elif coord=='y1':
+                    y1=int(fig_data[key])
             
             if x0 > x1:
                 
-                x0, x1 = x1, x0
+                x0, x1=x1, x0
                 
             if y0 > y1:
                 
-                y0, y1 = y1, y0
+                y0, y1=y1, y0
             
-            Height = int(abs(y1 - y0))
-            Width = int(abs(x1 - x0))
-            ratio = imo.G_R_operation(x0, x1, y0, y1)
-            n = int(shape_nb)
+            Height=int(abs(y1 - y0))
+            Width=int(abs(x1 - x0))
+            ratio=imo.G_R_operation(x0, x1, y0, y1)
+            n=int(shape_nb)
             
-            new_row[int(shape_nb)]['Selection'] = n
-            new_row[int(shape_nb)]['Type'] = fiber
-            new_row[int(shape_nb)]['Height'] = Height
-            new_row[int(shape_nb)]['Width'] = Width
-            new_row[int(shape_nb)]['Green:Red'] = ratio
+            new_row[int(shape_nb)]['Selection']=n
+            new_row[int(shape_nb)]['Type']=fiber
+            new_row[int(shape_nb)]['Height']=Height
+            new_row[int(shape_nb)]['Width']=Width
+            new_row[int(shape_nb)]['Green:Red']=ratio
         
         if shape_coords is None:
             
-            shape_coords = [{'n':n, 'x0':x0, 'y0': y0, 'x1': x1, 'y1':y1}]
+            shape_coords=[{'n':n, 'x0':x0, 'y0': y0, 'x1': x1, 'y1':y1}]
             
         else:
             
@@ -682,23 +792,23 @@ def shape_added(fig_data, fig, tab, fiber, shape_coords, shape_number, new_row):
 
 def selection_fiber_image(fig_data, fig, tab, shape_coords): 
     
-    if tab == 'selections':
+    if tab=='selections':
         
         if fig_data is None:
             
             return blank_fig()
         
-        nparr = np.frombuffer(base64.b64decode(fig['data'][0]['source'][22:]), np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        imo = ImageOperations(image_file_src=img)
-        out_img = imo.read_operation()
+        nparr=np.frombuffer(base64.b64decode(fig['data'][0]['source'][22:]), np.uint8)
+        img=cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        img=cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        imo=ImageOperations(image_file_src=img)
+        out_img=imo.read_operation()
         
-        x0, y0 = shape_coords[-1]['x0'], shape_coords[-1]['y0']
-        x1, y1 = shape_coords[-1]['x1'], shape_coords[-1]['y1']
+        x0, y0=shape_coords[-1]['x0'], shape_coords[-1]['y0']
+        x1, y1=shape_coords[-1]['x1'], shape_coords[-1]['y1']
         
-        out_img = imo.crop_operation(x0,x1,y0,y1)
-        out_image_fig = px.imshow(out_img)
+        out_img=imo.crop_operation(x0,x1,y0,y1)
+        out_image_fig=px.imshow(out_img)
         out_image_fig.update_layout(height=750,
             coloraxis_showscale=False, 
             margin=dict(l=0, r=0, b=0, t=0)
@@ -729,18 +839,18 @@ def style_selected_rows(shape_number, hover_data, shape_coords):
     
     if hover_data is not None:
         
-        x0 = hover_data["points"][0]["x"] ; y0 = hover_data["points"][0]["y"]
+        x0=hover_data["points"][0]["x"] ; y0=hover_data["points"][0]["y"]
         
         for i in range(len(shape_coords)):
             
-            if x0 >= shape_coords[i]['x0'] and x0 <= shape_coords[i]['x1']:
+            if x0 >=shape_coords[i]['x0'] and x0 <=shape_coords[i]['x1']:
                 
-                if y0 >= shape_coords[i]['y0'] and y0 <= shape_coords[i]['y1']:
+                if y0 >=shape_coords[i]['y0'] and y0 <=shape_coords[i]['y1']:
                     
                     style_data_conditional=[
                         {
                             'if': {
-                                'filter_query': '{{Selection}} = {}'.format(shape_coords[i]['n']),
+                                'filter_query': '{{Selection}}={}'.format(shape_coords[i]['n']),
                             },
                             'backgroundColor': '#0074D9',
                             'color': 'white'
@@ -749,5 +859,5 @@ def style_selected_rows(shape_number, hover_data, shape_coords):
     
                     return style_data_conditional
     
-if __name__ == '__main__':
+if __name__=='__main__':
     app.run_server(debug=True)

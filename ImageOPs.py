@@ -89,17 +89,53 @@ class ImageOperations(object):
         image_src = cv2.LUT(image_src, table)
         return image_src
     
+    def auto_correct_operation(self, c1, c2):
+        
+        image_src = self.image_file_src
+        
+        if c1 not in ['B','M','C'] and c2 not in ['B','M','C']:
+
+            image_src[:,:,2] = np.zeros([image_src.shape[0], image_src.shape[1]])
+            
+        if c1 not in ['G','Y','C'] and c2 not in ['G','Y','C']:
+
+            image_src[:,:,1] = np.zeros([image_src.shape[0], image_src.shape[1]])
+            
+        if c1 not in ['R','Y','M'] and c2 not in ['R','Y','M']:
+
+            image_src[:,:,0] = np.zeros([image_src.shape[0], image_src.shape[1]])
+            
+        blue_val = np.mean(image_src[:,:,2].flatten()) + np.std(image_src[:,:,2].flatten())
+        green_val = np.mean(image_src[:,:,1].flatten()) + np.std(image_src[:,:,1].flatten())
+        red_val = np.mean(image_src[:,:,0].flatten()) + np.std(image_src[:,:,0].flatten())
+        
+        if c1 not in ['B','M','C'] and c2 not in ['B','M','C']:
+            
+            blue_val = 255
+            
+        if c1 not in ['G','Y','C'] and c2 not in ['G','Y','C']:
+            
+            green_val = 255
+            
+        if c1 not in ['R','Y','M'] and c2 not in ['R','Y','M']:
+            
+            red_val = 255
+        
+        image_src = self.image_file_src
+        
+        return int(red_val), int(green_val), int(blue_val), 1, 1, 0
+    
     def denoiseI_operation(self, thresh_val):
         
         image_src = self.image_file_src
-        image_src = cv2.fastNlMeansDenoisingColored(image_src,thresh_val,thresh_val,0,7,21)
+        image_src = cv2.fastNlMeansDenoisingColored(image_src,None,thresh_val,thresh_val,7,21)
         
         return image_src
     
     def contrast_operation(self, thresh_val):
         
         image_src = self.image_file_src
-        image_src = cv2.convertScaleAbs(image_src, alpha=thresh_val, beta=0)
+        image_src = cv2.convertScaleAbs(image_src, alpha = thresh_val, beta=0)
 
         return image_src
 
