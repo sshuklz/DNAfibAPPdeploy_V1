@@ -1,0 +1,43 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #FFFFFF
+}
+
+a.modebar-btn {
+    font-size: 20px !important;
+}
+
+.flex-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-item-left {
+  padding: 50px;
+  flex: 50%;
+}
+
+.flex-item-right {
+  padding: 10px;
+  flex: 5%;
+  text-align: center;
+}
+
+/* Responsive layout - makes a one column-layout instead of two-column layout */
+@media (max-width: 800px) {
+  .flex-container {
+    flex-direction: column;
+  }
+}
+
+.select-operation {
+  padding-left: 50px;
+  padding-top: 30px
+}
+
+.tab-div {
+  padding-top: 50px;
+}
