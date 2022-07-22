@@ -16,7 +16,9 @@ a.modebar-btn {
 }
 
 .flex-item-left {
-  padding: 50px;
+  padding-left: 10px;
+  padding-top: 50px;
+  padding-bottom: 50px;
   flex: 50%;
 }
 
@@ -26,18 +28,18 @@ a.modebar-btn {
   text-align: center;
 }
 
-/* Responsive layout - makes a one column-layout instead of two-column layout */
-@media (max-width: 800px) {
-  .flex-container {
-    flex-direction: column;
-  }
-}
-
 .select-operation {
   padding-left: 50px;
   padding-top: 30px
 }
 
+.flex-item-topright {
+  padding: 10px;
+  flex: 5%;
+  text-align: center;
+}
+
 .tab-div {
+  width: 540px;
   padding-top: 50px;
 }

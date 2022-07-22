@@ -10,10 +10,10 @@ from dash import callback_context
 from dash import dash_table
 from dash import dcc
 from dash import html
-import dash_bootstrap_components as dbc
+from dash_iconify import DashIconify
+import dash_mantine_components as dmc
 import dash_daq as daq
 from dash.dependencies import (Input, Output, State)
-
 
 import base64
 import cv2
@@ -36,94 +36,62 @@ app.title='DNA Fiber Analysis DEMO'
 
 DNA_fiber_types=['stalled',
                 '2nd origin',
-                'progressing fork one direction',
-                'progressing fork bidirectional',
+                'one-way fork',
+                'two-way fork',
                 'terminated fork',
                 'interspersed']
 
 color_types=['Primary Red : Secondary Green',
-               'Primary Green : Secondary Red',
-               'Primary Red : Secondary Blue',
-               'Primary Blue : Secondary Red',
-               'Primary Green : Secondary Blue',
-               'Primary Blue : Secondary Green',
+             'Primary Green : Secondary Red',
+             'Primary Red : Secondary Blue',
+             'Primary Blue : Secondary Red',
+             'Primary Green : Secondary Blue',
+             'Primary Blue : Secondary Green',
                
-              'Primary Yellow : Secondary Blue',
-              'Primary Blue : Secondary Yellow',
-              'Primary Magenta : Secondary Green',
-              'Primary Green : Secondary Magenta',
-              'Primary Red : Secondary Cyan',
-              'Primary Cyan : Secondary Red',
+             'Primary Yellow : Secondary Blue',
+             'Primary Blue : Secondary Yellow',
+             'Primary Magenta : Secondary Green',
+             'Primary Green : Secondary Magenta',
+             'Primary Red : Secondary Cyan',
+             'Primary Cyan : Secondary Red',
               
-              'Primary Yellow : Secondary Magenta',
-              'Primary Magenta : Secondary Yellow',
-              'Primary Cyan : Secondary Magenta',
-              'Primary Magenta : Secondary Cyan',
-              'Primary Cyan : Secondary Yellow',
-              'Primary Yellow : Secondary Cyan']
+             'Primary Yellow : Secondary Magenta',
+             'Primary Magenta : Secondary Yellow',
+             'Primary Cyan : Secondary Magenta',
+             'Primary Magenta : Secondary Cyan',
+             'Primary Cyan : Secondary Yellow',
+             'Primary Yellow : Secondary Cyan']
 
-tab_style={
-    'borderBottom': '1px solid #d6d6d6',
-    'padding': '6px',
-    'fontWeight': 'bold',
-    'align-items': 'center'
-}
+colors=[['R','G'],['G','R'],['R','B'],['B','R'],['G','B'],['B','G'],
+        ['Y','B'],['B','Y'],['M','G'],['G','M'],['R','C'],['C','R'],
+        ['Y','M'],['M','Y'],['C','M'],['M','C'],['C','Y'],['Y','C']]
 
-tab_selected_style={
-    'borderTop': '1px solid #d6d6d6',
-    'borderBottom': '1px solid #d6d6d6',
-    'backgroundColor': '#119DFF',
-    'color': 'white',
-    'fontWeight': 'bold',
-    'padding': '6px',
-    'align-items': 'center',
-    'justify-content' : 'center'
-}
+df=pd.DataFrame(columns=['Fiber', 'Type', 'Height', 'Width', 'Segments'])
 
-df=pd.DataFrame(columns=['Selection', 'Type', 'Height', 'Width', 'Green:Red'])
-
-columns=['Selection', 'Type', 'Height', 'Width', 'Green:Red']
-
-colors=[
- ['R','G'],
- ['G','R'],
- ['R','B'],
- ['B','R'],
- ['G','B'],
- ['B','G'],
-  ['Y','B'],
-  ['B','Y'],
-  ['M','G'],
-  ['G','M'],
-  ['R','C'],
-  ['C','R'],
-   ['Y','M'],
-   ['M','Y'],
-   ['C','M'],
-   ['M','C'],
-   ['C','Y'],
-   ['Y','C']]
+columns=['Fiber', 'Type', 'Height', 'Width', 'Segments']
 
 color_options=[]
-
 height_vals=[10,10,30,10,10,30]
-
-marks_T={i: str(i) for i in range(0, 256, 15)}
 
 for i in range(len(colors)):
 
     c1=colors[i][0] ; c2=colors[i][1]
-    label_name=c1 +c2 + '.png'
+    label_name = c1 +c2 + '.png'
 
-    color_options.append(
-    {
-        "label": html.Div(
-            [
-                html.Img(src="/assets/Color_options/Label_" + label_name, height=30),
-                html.Div(color_types[i], style={'font-size': 15, 'padding-left': 10}),
-            ], style={'display': 'flex', 'align-items': 'center', 'justify-content': 'left'}
-        ),
-        "value": color_types[i],
+    color_options.append({
+        
+        "label": html.Div([
+            
+            html.Img(src="/assets/Color_options/Label_" +
+                     label_name,height=30),
+            
+            html.Div(color_types[i],
+                     style={'font-size':15,'padding-left':10}),
+        
+        ], style={'display': 'flex',
+                  'align-items': 'center', 
+                  'justify-content': 'left'}),"value": color_types[i]
+        
     })
 
 def fiber_dropdown_images(c1,c2):
@@ -132,34 +100,35 @@ def fiber_dropdown_images(c1,c2):
 
     for i in range(6):
     
-        label_name=DNA_fiber_types[i].replace(" ", "_") + '_' + c1 + '_' + c2 + '.png'
+        label_name = (DNA_fiber_types[i].replace(" ", "_") +
+                      '_' + c1 + '_' + c2 + '.png')
     
-        fiber_options.append(
-            {
-                "label": html.Div(
-                    [
-                        html.Img(src="/assets/DNA_Fib_type_colors/" + label_name, height=height_vals[i]),
-                        html.Div(DNA_fiber_types[i], style={'font-size': 15, 'padding-left': 10}),
-                    ], style={'display': 'flex', 'align-items': 'center', 'justify-content': 'start',}
-                ),
-                "value": DNA_fiber_types[i],
-            })
+        fiber_options.append({
+            
+            "label": html.Div([
+                
+                html.Img(src="/assets/DNA_Fib_type_colors/" +
+                         label_name, height=height_vals[i], width = 80),
+                
+                html.Div(DNA_fiber_types[i], 
+                         style={'font-size': 15, 'padding-left': 10}),
+                
+            ], style={'display': 'flex',
+                      'align-items': 'center',
+                      'justify-content': 'start'}),"value": DNA_fiber_types[i]
+                      
+        })
         
     return(fiber_options)
 
-items_method=[
-    dbc.DropdownMenuItem("Rectangle"),
-    dbc.DropdownMenuItem("Lasso"),
-    dbc.DropdownMenuItem("Line"),
-]
-
-fig=px.imshow(io.imread("assets/blank.png"))
+fig = px.imshow(io.imread("assets/blank.png"))
 
 fig.update_layout(
     coloraxis_showscale=False, 
     width=1000, height=750, 
-    margin=dict(l=0, r=0, b=0, t=0)
-)
+    margin=dict(l=0, r=0, b=0, t=0))
+
+fig.update_layout(hovermode=False)
 fig.update_xaxes(showticklabels=False)
 fig.update_yaxes(showticklabels=False)
 fig.update_layout(dragmode=False)
@@ -167,7 +136,8 @@ fig.update_layout(dragmode=False)
 app.layout=html.Div([
     
     html.Meta(charSet='UTF-8'),
-    html.Meta(name='viewport', content='width=device-width, initial-scale=1.0'),
+    html.Meta(name='viewport', 
+              content='width=device-width, initial-scale=1.0'),
     
     dcc.Store(id='shape_coords', storage_type='memory'), 
     dcc.Store(id='shape_number', storage_type='memory'), 
@@ -177,14 +147,22 @@ app.layout=html.Div([
             html.Div(
                 id='title-app', 
                 children=[html.H1(app.title)],
-                style={'textAlign' : 'center', 'paddingTop' : 0}),
+                
+                style={'textAlign' : 'center',
+                       'paddingTop' : 0,
+                       'width' : '540px'}),
             
             html.Div([
+                
                 dcc.Upload(
                     id='upload-image',
-                    children=html.Div(['Drag and Drop or ', html.A('Select Files')]),
-                    style={
-                        'width': '100%',
+                    
+                    children=html.Div(
+                        
+                        ['Drag and Drop or ', html.A('Select Files')]
+                    
+                    ),style={
+                        'width': '540px',
                         'height': '70px',
                         'lineHeight': '60px',
                         'borderWidth': '1px',
@@ -192,10 +170,9 @@ app.layout=html.Div([
                         'borderRadius': '5px',
                         'textAlign': 'center',
                         'margin': '10px',
-                        'backgroundColor': '#F0F1F1'
-                    },
-                    multiple=True),
-                ], style={'paddingTop' : 30}),
+                        'backgroundColor': '#F0F1F1'},multiple=True)
+                
+            ], style={'paddingTop' : 30}),
             
             html.Div([
                 
@@ -207,17 +184,41 @@ app.layout=html.Div([
                         dcc.Tab(
                             label='Label and Fiber Details',
                             value='color_tab',
-                            style=tab_style,
-                            selected_style=tab_selected_style,
+                            
+                            style={'borderBottom': '1px solid #d6d6d6',
+                                   'padding': '6px',
+                                   'fontWeight': 'bold',
+                                   'align-items': 'center'},
+                            
+                            selected_style={'borderTop': '1px solid #d6d6d6',
+                                            'borderBottom': '1px solid #d6d6d6',
+                                            'backgroundColor': '#228bee',
+                                            'color': 'white',
+                                            'fontWeight': 'bold',
+                                            'padding': '6px',
+                                            'align-items': 'center',
+                                            'justify-content' : 'center'},
+                            
                             children=[html.Div([
                                     
-                                html.H6('Label Colors', style={'paddingTop' : 15}),
-                                html.Div([dcc.Dropdown(color_options, 
-                                                       color_types[0],
-                                                       id='color_label-dropdown')]),
+                                html.H6('Label Colors', 
+                                        style={'paddingTop' : 15}),
                                 
-                                html.H6('Corrosponding Schema', style={'paddingTop' : 15}),
-                                html.Img(id='schema', style={'height':'100%', 'width':'100%'})
+                                
+                                html.Div([
+                                    
+                                    dcc.Dropdown(color_options, 
+                                                 color_types[0],
+                                                 id='color_label-dropdown')
+                                    
+                                ]),
+                                
+                                html.H6('Corrosponding Schema', 
+                                        style={'paddingTop' : 15}),
+                                
+                                html.Img(id='schema', 
+                                         style={'height':'100%', 
+                                                'width':'100%'})
                                 
                             ])]
                             
@@ -226,11 +227,26 @@ app.layout=html.Div([
                         dcc.Tab(
                             label='Image Operations',
                             value='operators',
-                            style=tab_style,
-                            selected_style=tab_selected_style,
+                            
+                            style={'borderBottom': '1px solid #d6d6d6',
+                                   'padding': '6px',
+                                   'fontWeight': 'bold',
+                                   'align-items': 'center'},
+                            
+                            selected_style={'borderTop': '1px solid #d6d6d6',
+                                            'borderBottom': '1px solid #d6d6d6',
+                                            'backgroundColor': '#228bee',
+                                            'color': 'white',
+                                            'fontWeight': 'bold',
+                                            'padding': '6px',
+                                            'align-items': 'center',
+                                            'justify-content' : 'center'},
+                            
                             children=[html.Div([
                                 
-                                html.H6('Subtract RGB From Image', style={'paddingTop' : 15}),
+                                html.H6('Subtract RGB From Image', 
+                                        style={'paddingTop' : 15}),
+                                
                                 daq.Slider(
                                     id='slider-CR',
                                     min=0,
@@ -239,9 +255,10 @@ app.layout=html.Div([
                                     value=0,
                                     size=540,
                                     color='red',
-                                    marks=marks_T),
+                                    marks={i: str(i) for i in range(0, 256, 15)}),
                                 
                                 html.H6(' ', style={'paddingTop' : 15}),
+                                
                                 daq.Slider(
                                     id='slider-GR',
                                     min=0,
@@ -253,6 +270,7 @@ app.layout=html.Div([
                                     marks={i: str(i) for i in range(0, 256, 15)}),
                                            
                                 html.H6(' ', style={'paddingTop' : 15}),
+                                
                                 daq.Slider(
                                     id='slider-BR',
                                     min=0,
@@ -265,60 +283,151 @@ app.layout=html.Div([
                                         
                                 html.Div([
                                 
-                                    html.Button('BKG Correct',
+                                    dmc.Button('BKG Correct',
                                                 id='auto-btn',
                                                 n_clicks=0,
                                                 style={'font-size': '14px',
-                                                       'width': '180px'}),
+                                                       'width': '180px'}
+                                                
+                                )], style={'paddingTop' : 45,
+                                           'margin-bottom': '10px',
+                                           'textAlign':'center',
+                                           'width': '220px',
+                                           'margin':'auto'}),
+                                
+                                html.Div(children=[
                                     
-                                ], style={'paddingTop' : 45,
-                                          'margin-bottom': '10px',
-                                          'textAlign':'center',
-                                          'width': '220px',
-                                          'margin':'auto'}),
-                                
-                                html.H6('Gamma', style={'paddingTop' : 15}),
-                                daq.Slider(
-                                    id='slider-Gamma',
-                                    min=0.01,
-                                    max=2,
-                                    step=0.01,
-                                    value=1,
-                                    size=540,
-                                    color='DarkGrey',
-                                    marks={i: str(i) for i in range(0, 3, 1)}),
-                                
-                                html.H6('Contrast', style={'paddingTop' : 15}),
-                                daq.Slider(
-                                    id='slider-Contrast',
-                                    min=0.01,
-                                    max=2,
-                                    step=0.01,
-                                    value=1,
-                                    size=540,
-                                    color='DarkGrey',
-                                    marks={i: str(i) for i in range(0, 3, 1)}),
-                                
-                                html.H6('Denoise', style={'paddingTop' : 15}),
-                                daq.Slider(
-                                    id='slider-DI',
-                                    min=0,
-                                    max=50,
-                                    step=1,
-                                    value=0,
-                                    size=540,
-                                    color='DarkGrey',
-                                    marks={i: str(i) for i in range(0, 60, 10)}),
+                                    html.Div([
+                                          
+                                        html.H6('Gamma', 
+                                                style={'paddingTop' : 15}),
+                                        
+                                        daq.Slider(
+                                            id='slider-Gamma',
+                                            min=0.01,
+                                            max=2,
+                                            step=0.01,
+                                            value=1,
+                                            size=270,
+                                            color='DarkGrey',
+                                            marks={i: str(i) for i in range(0, 3, 1)}),
+                                        
+                                        html.H6('Contrast', 
+                                                style={'paddingTop' : 15}),
+                                        
+                                        daq.Slider(
+                                            id='slider-Contrast',
+                                            min=0.01,
+                                            max=2,
+                                            step=0.01,
+                                            value=1,
+                                            size=270,
+                                            color='DarkGrey',
+                                            marks={i: str(i) for i in range(0, 3, 1)}),
+                                        
+                                        html.H6('Denoise', 
+                                                style={'paddingTop' : 15}),
+                                        
+                                        daq.Slider(
+                                            id='slider-DI',
+                                            min=0,
+                                            max=50,
+                                            step=1,
+                                            value=0,
+                                            size=270,
+                                            color='DarkGrey',
+                                            marks={i: str(i) for i in range(0, 60, 10)})
+                                        
+                                        ]),
+                                    
+                                    html.Div([
+                                        
+                                        html.H6('Rotate Image', 
+                                                style={'paddingTop' : 15,
+                                                       'textAlign':'center',
+                                                       'height' : 40,
+                                                       'width' : 200}),
+                                        
+                                        html.Div([
+                                        
+                                            dmc.Button(id='rotate_left',
+                                                       radius= 1,
+                                                       size = 'xs',
+                                                       style={'width' : 55},
+                                                       leftIcon=[
+                                                            DashIconify(
+                                                            icon="carbon:rotate-counterclockwise-alt",
+                                                            width=35,
+                                                            style={'paddingLeft' : 10})
+                                                        ]),
+                                            
+                                            dmc.Button(id='rotate_right',
+                                                       radius= 1,
+                                                       size = 'xs',
+                                                       style={'width' : 55},
+                                                       leftIcon=[
+                                                            DashIconify(
+                                                            icon="carbon:rotate-clockwise-alt",
+                                                            width=35,
+                                                            style={'paddingLeft' : 10})
+                                                        ]),
+                                            
+                                            dmc.Button(id='flip_hor',
+                                                       radius= 1,
+                                                       size = 'xs',
+                                                       style={'width' : 55},
+                                                       leftIcon=[
+                                                            DashIconify(
+                                                            icon="eva:flip-2-fill",
+                                                            width=30,
+                                                            style={'paddingLeft' : 10})
+                                                        ]),
+                                            
+                                            dmc.Button(id='flip_ver',
+                                                       radius= 1,
+                                                       size = 'xs',
+                                                       style={'width' : 55},
+                                                       leftIcon=[
+                                                            DashIconify(
+                                                            id='rotate_left',
+                                                            icon="eva:flip-fill",
+                                                            width=29,
+                                                            style={'paddingLeft' : 10})
+                                                        ])
+                                        
+                                        ], style={'paddingBottom' : 15,
+                                                  'height' : 30,
+                                                  'width' : 200,
+                                                  'display':'flex',
+                                                  'justify-content':'space-around'}),
+                                        
+                                                  
+                                        html.Div([
+                                                  
+                                            daq.Knob(id='rotate-knob',
+                                                     min = -150,
+                                                     max = 150,
+                                                     size = 120, 
+                                                     value = 0,
+                                                     color = '#e6e6e6',
+                                                     scale={'labelInterval': 1, 
+                                                            'interval': 30})
+                                        
+                                        ], style={'textAlign' : 'center'})
+                                    ]),
+
+                                ], style={'display':'flex',
+                                          'justify-content':'space-between'}),
                                      
                                 html.Div([
                                           
-                                    html.Button('Reset Image',
+                                    dmc.Button('Reset Image',
                                                 id='reset-btn',
                                                 n_clicks=0,
                                                 style={'font-size': '14px',
                                                        'width': '180px'})
                                 
-                                ], style={'paddingTop' : 45,
+                                ], style={'paddingTop' : 0,
                                           'margin-bottom': '10px',
                                           'textAlign':'center',
                                           'width': '220px',
@@ -331,8 +440,21 @@ app.layout=html.Div([
                         dcc.Tab(
                             label='Image Selections',
                             value='selections',
-                            style=tab_style,
-                            selected_style=tab_selected_style,
+                            
+                            style={'borderBottom': '1px solid #d6d6d6',
+                                   'padding': '6px',
+                                   'fontWeight': 'bold',
+                                   'align-items': 'center'},
+                            
+                            selected_style={'borderTop': '1px solid #d6d6d6',
+                                            'borderBottom': '1px solid #d6d6d6',
+                                            'backgroundColor': '#228bee',
+                                            'color': 'white',
+                                            'fontWeight': 'bold',
+                                            'padding': '6px',
+                                            'align-items': 'center',
+                                            'justify-content' : 'center'},
+                            
                             children=[html.Div([
                                     
                                 html.H6('Selection type', style={'paddingTop' : 15}),
@@ -389,53 +511,69 @@ app.layout=html.Div([
             
         ], className='flex-item-left'),
 
-    html.Div(html.Div([html.Div( 
-            
-        children=[
-            
-            html.H4('Image Used - Output'),
-            dcc.Loading(
-                id='loading-op',
-                type='dot',
-                children=html.Div(html.Div([html.Div([
-                    
-                    dcc.Graph(id='out-op-img', 
-                              figure=fig,
-                              config={'modeBarButtonsToAdd':['eraseshape'],
-                                      'modeBarButtonsToRemove':['zoom2d',
-                                                                'pan2d',
-                                                                'zoomIn2d',
-                                                                'zoomOut2d',
-                                                                'autoScale2d',
-                                                                'resetScale2d'],
-                                      'displaylogo':False})
-                    
-                ], style={'paddingTop' : 50,})]))
-            )
-            
-        ],style={'textAlign' : 'center', 'paddingTop' : 50}
-            
-    )]), className='flex-item-right'),
-
-    html.Div(html.Div([html.Div( 
+    html.Div(children=[
+                                          
+        html.Div(
+                
+            children=[
+                
+                html.H4('Image Used - Output', style={"textAlign": "center",
+                                                      'paddingBottom' : 50,
+                                                      'paddingTop' : 50,
+                                                      'paddingRight' : 10}),
+                
+                dcc.Loading(
+                    id='loading-op',
+                    type='dot',
+                    children=html.Div([
+                        
+                        dcc.Graph(id='out-op-img', 
+                                  figure=fig,
+                                  config={'displaylogo':False,
+                                          'modeBarButtonsToAdd':['eraseshape'],
+                                          'modeBarButtonsToRemove':[
+                                              'zoom2d',
+                                              'pan2d',
+                                              'zoomIn2d',
+                                              'zoomOut2d',
+                                              'autoScale2d',
+                                              'resetScale2d']})
+                        
+                    ],style={'paddingRight' : 10})
+                )
+                
+            ]
+                
+        ),
         
-        children=[
-            html.H4(' ', id='Selected_Fiber_Title'),
-            dcc.Loading(
-                id='loading-sel',
-                type='dot',
-                children=html.Div((html.Div([html.Div([
-                    
-                    dcc.Graph(id='sel-op-img', 
-                              figure=blank_fig(),
-                              config={'displayModeBar' : False})
-                    
-                ], style={'paddingTop' : 12,})])))
-            )
-            
-        ], style={'textAlign' : 'center', 'paddingTop' : 50}
-    
-    )]), className='flex-item-right')
+        html.Div(
+                
+            children=[
+                
+                html.H4(' ',
+                        id='Selected_Fiber_Title', 
+                        style={"textAlign": "center",
+                               'paddingBottom' : 15,
+                               'paddingTop' : 50,
+                               'paddingRight' : 10}),
+                
+                dcc.Loading(
+                    id='loading-sel',
+                    type='dot',
+                    children=html.Div(
+                        
+                        dcc.Graph(id='sel-op-img', 
+                                  figure=blank_fig(),
+                                  config={'displayModeBar' : False})
+                        
+                    )
+                )
+                
+            ], style={'width': '120px','paddingRight' : 10}
+                
+        )
+        
+    ], className='flex-container')
 
 ], className='flex-container')
 
@@ -586,6 +724,7 @@ def get_operated_image(contents, gam, CR, GR, BR, DI, con, tab, method, filename
             width=1000, height=750, 
             margin=dict(l=0, r=0, b=0, t=0)
         )
+        out_image_fig.update_traces(hoverinfo='none', hovertemplate='')
         out_image_fig.update_xaxes(showticklabels=False)
         out_image_fig.update_yaxes(showticklabels=False)
         out_image_fig.update_layout(dragmode=False)
@@ -627,7 +766,7 @@ def get_operated_image(contents, gam, CR, GR, BR, DI, con, tab, method, filename
      Input('shape_number', 'data')],
     State("annotations-table", "data"),prevent_initial_call=True)
 
-def shape_added(fig_data, fig, tab, fiber, shape_coords, shape_number, new_row): 
+def shape_added(fig_data, fig, tab, fiber, s_coords, shape_number, new_row): 
     
     if tab=='selections':
         
@@ -669,15 +808,15 @@ def shape_added(fig_data, fig, tab, fiber, shape_coords, shape_number, new_row):
             if new_row is None:
             
                 n=0
-                new_row=[{'Selection':n, 
+                new_row=[{'Fiber':n, 
                             'Type':fiber, 
                             'Height': Height, 
                             'Width': Width, 
-                            'Green:Red':ratio}]
+                            'Segments':ratio}]
                 
             else:
                 
-                if len(fig_data["shapes"]) < shape_number:
+                if shape_n < shape_number:
                     
                     shape_coord=[]; table_coord=[]
                     
@@ -696,7 +835,7 @@ def shape_added(fig_data, fig, tab, fiber, shape_coords, shape_number, new_row):
                         
                         shape_coord +=[[x0,x1,y0,y1]]
                     
-                    for coord in shape_coords:
+                    for coord in s_coords:
                             
                         table_coord +=[[coord['x0'],
                                          coord['x1'],
@@ -709,30 +848,30 @@ def shape_added(fig_data, fig, tab, fiber, shape_coords, shape_number, new_row):
                             
                             x0=i[0] ; x1=i[1] ; y0=i[2] ; y1=i[3]
                             
-                    for coord in shape_coords:
+                    for coord in s_coords:
                         
                         if [coord['x0'],coord['x1'],coord['y0'],coord['y1']]==[x0,x1,y0,y1]:
                             
-                            new_row=list(filter(lambda i: i['Selection'] !=coord['n'], new_row))
-                            shape_coords=list(filter(lambda i: i['n'] !=coord['n'], shape_coords))
+                            new_row=list(filter(lambda i: i['Fiber'] !=coord['n'], new_row))
+                            s_coords=list(filter(lambda i: i['n'] !=coord['n'], s_coords))
 
-                            return new_row, len(fig_data["shapes"]), shape_coords
+                            return new_row, len(fig_data["shapes"]), s_coords
                         
-                if new_row[-1]=={'Selection':new_row[-1]['Selection'],
+                if new_row[-1]=={'Fiber':new_row[-1]['Fiber'],
                                    'Type':fiber, 
                                    'Height': Height, 
                                    'Width': Width, 
-                                   'Green:Red':ratio}:
+                                   'Segments':ratio}:
                     
                     return dash.no_update
                 
-                n=new_row[-1]['Selection'] + 1
+                n=new_row[-1]['Fiber'] + 1
                 
-                new_row.append({'Selection':n, 
+                new_row.append({'Fiber':n, 
                                 'Type':fiber, 
                                 'Height': Height, 
                                 'Width': Width, 
-                                'Green:Red':ratio})
+                                'Segments':ratio})
             
         elif re.match("shapes\[[0-9]+\].x0", list(fig_data.keys())[0]):
             
@@ -772,21 +911,26 @@ def shape_added(fig_data, fig, tab, fiber, shape_coords, shape_number, new_row):
             ratio=imo.G_R_operation(x0, x1, y0, y1)
             n=int(shape_nb)
             
-            new_row[int(shape_nb)]['Selection']=n
+            new_row[int(shape_nb)]['Fiber']=n
             new_row[int(shape_nb)]['Type']=fiber
             new_row[int(shape_nb)]['Height']=Height
             new_row[int(shape_nb)]['Width']=Width
-            new_row[int(shape_nb)]['Green:Red']=ratio
+            new_row[int(shape_nb)]['Segments']=ratio
         
-        if shape_coords is None:
+            if [s_coords[-1]['x0'],s_coords[-1]['y0'],s_coords[-1]['x1'],s_coords[-1]['y1']] \
+                == [x0,y0,x1,y1]:
+                
+                dash.no_update
+        
+        if s_coords is None:
             
-            shape_coords=[{'n':n, 'x0':x0, 'y0': y0, 'x1': x1, 'y1':y1}]
+            s_coords=[{'n':n, 'x0':x0, 'y0': y0, 'x1': x1, 'y1':y1}]
             
         else:
             
-            shape_coords.append({'n':n, 'x0':x0, 'y0': y0, 'x1': x1, 'y1':y1})
+            s_coords.append({'n':n, 'x0':x0, 'y0': y0, 'x1': x1, 'y1':y1})
         
-        return new_row, shape_n, shape_coords
+        return new_row, shape_n, s_coords
     
     else:
         
@@ -859,7 +1003,7 @@ def style_selected_rows(shape_number, hover_data, shape_coords):
                     style_data_conditional=[
                         {
                             'if': {
-                                'filter_query': '{{Selection}}={}'.format(shape_coords[i]['n']),
+                                'filter_query': '{{Fiber}}={}'.format(shape_coords[i]['n']),
                             },
                             'backgroundColor': '#0074D9',
                             'color': 'white'
